@@ -1,0 +1,71 @@
+Generar script para poblar todas las tablas.
+
+ INSERT INTO `Cajeros` (`Cajero` , `NomApels`) VALUES (1, unnombre);
+ INSERT INTO `Maquinas_Registradoras` (`Maquina` , `Piso`) VALUES (1, 3);
+  INSERT INTO `Productos` (`Nombre` , `Precio`) VALUES (producto12, 13,000.00);
+
+
+Mostrar el número de ventas de cada producto, ordenado de más a menos ventas.
+
+SELECT Producto, Nombre, COUNT(VENTA.Producto)
+FROM PRODUCTOS LEFT JOIN VENTA
+ON PRODUCTOS.Producto = VENTA.Producto
+GROUP BY Producto, Nombre
+ORDER BY COUNT(VENTA.Producto) DESC;
+
+
+Obtener un informe completo de ventas, indicando el nombre del cajero que realizo la venta, nombre y precios
+de los productos vendidos, y el piso en el que se encuentra la máquina registradora donde se realizó la venta.
+
+SELECT NomApels, Nombre, Precio, Piso
+FROM CAJEROS C INNER JOIN
+(PRODUCTOS P INNER JOIN
+(MAQUINAS_REGISTRADORAS M INNER JOIN VENTA V
+ON V.Maquina = M.Maquina)
+ON V.Producto = P.Producto)
+ON V.Cajero = C.Cajero;
+
+
+
+Obtener las ventas totales realizadas en cada piso.
+
+SELECT Piso, SUM(Precio)
+FROM VENTA V, PRODUCTOS P, MAQUINAS_REGISTRADORAS M
+WHERE V.Producto = P.Prodcuto
+AND V.Maquina = M.Maquina
+GROUP BY Piso;
+
+
+Obtener el código y nombre de cada cajero junto con el importe total de sus ventas.
+
+SELECT C.Cajero, C.NomApels, SUM(Precio)
+FROM PRODUCTOS P INNER JOIN
+(CAJEROS C LEFT JOIN VENTA V
+ON V.Cajero = C.Cajero)
+ON V.Producto = P.Producto
+GROUP BY C.Cajero, NomApels;
+
+
+Obtener el código y nombre de aquellos cajeros que hayan realizado ventas en pisos cuyas ventas totales
+sean inferiores a los 5000 pesos
+
+
+SELECT Codigo, NomApels
+FROM CAJEROS
+WHERE Cajero IN
+(
+	SELECT Cajero FROM VENTA
+	WHERE Maquina IN
+	(
+		SELECT Maquina FROM MAQUINAS_REGISTRADORAS
+		WHERE Piso IN
+		(
+			SELECT Piso
+			FROM VENTA V, PRODUCTOS P, MAQUINAS_REGISTRADORAS M
+			WHERE V.Producto = P.Producto
+			AND V.Maquina = M.Maquina
+			GROUP BY Piso
+			HAVING SUM(Precio) < 500
+		)
+	)
+)
